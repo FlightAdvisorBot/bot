@@ -13,6 +13,7 @@
 	"weekdays": "Weekdays",
 	"weekend": "Weekend",
 	"anytime": "Anytime",
+	"which-departure-airport": "Where are you departing from?",
 
 	"price-from": "From: %s$",
 	"view-cities": "View cities"

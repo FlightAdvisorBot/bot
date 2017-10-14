@@ -36,9 +36,9 @@ app.post("/api/messages", connector.listen());
 bot.dialog("/", [
 	(session, results, next) => {
 
-		let title = session.gettext("what-do-you-want-to-do");
+		let test = session.gettext("what-do-you-want-to-do");
 		let msg = new builder.Message(session)
-			.text(title)
+			.text(test)
 			.attachments([new builder.Keyboard(session)
 				.buttons([
 					builder.CardAction.imBack(session, session.gettext("manage-saving-fund"), "manage-saving-fund"),
@@ -155,7 +155,7 @@ bot.dialog("where-can-i-go", [
 			}
 		]
 
-    let cards = [];
+    let elements = [];
 
 		for(let recomendation of recomendations.slice(0, 4)) {
 			let elem = {
@@ -171,11 +171,11 @@ bot.dialog("where-can-i-go", [
           }
         ]
       }
-		}
 
-    let elements = [];
+      elements.push(elem);
+		}
     
-    let msg = new botbuilder.Message(session).sourceEvent({
+    let msg = new builder.Message(session).sourceEvent({
       //specify the channel
       facebook: {
         //format according to channel's requirements
@@ -199,7 +199,7 @@ bot.dialog("where-can-i-go", [
     })
 		
 		// builder.Prompts.text(msg);
-		// session.send(msg);
+		session.send(msg);
     
 	}
 ])
