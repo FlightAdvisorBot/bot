@@ -45,7 +45,8 @@ bot.dialog("/", [
 		
 		let msg = new builder.Message(session)
 			.attachments([card]);
-		builder.Prompts.text(msg);
+
+		builder.Prompts.text(session, msg);
 	},
 	(session, results, next) => {
 
@@ -70,7 +71,7 @@ bot.dialog("saving-fund", [
 		
 		let msg = new builder.Message(session)
 			.attachments([card]);
-		builder.Prompts.text(msg);
+		builder.Prompts.text(session, msg);
 	},
 	(session, results, next) => {
 		
@@ -88,7 +89,7 @@ bot.dialog("flight-planning", [
 		
 		let msg = new builder.Message(session)
 			.attachments([card]);
-		builder.Prompts.text(msg);
+		builder.Prompts.text(session, msg);
 	},
 	(session, results, next) => {
 		let message = session.message.text.toLowerCase();
@@ -112,7 +113,7 @@ bot.dialog("where-can-i-go", [
 		
 		let msg = new builder.Message(session)
 			.attachments([card]);
-		builder.Prompts.text(msg);
+		builder.Prompts.text(session, msg);
 	},
 	(session, results, next) => {
 		let cityFB = "Barcelona";
@@ -126,11 +127,12 @@ bot.dialog("where-can-i-go", [
 		
 		let msg = new builder.Message(session)
 			.attachments([card]);
-		builder.Prompts.text(msg);
+
+		builder.Prompts.text(session, msg);
 	},
 	(session, results, next) => {
 		let message = session.message.text.toLowerCase();
-		let recomendations = [,
+		let recomendations = [
 			{
 				from: "Barcelona",
 				to: "Madrid",
@@ -163,3 +165,20 @@ bot.dialog("where-can-i-go", [
 		session.send(msg);
 	}
 ])
+
+bot.use({
+	botbuilder: [
+		(session, next) => {
+			let message = session.message.text.toLowerCase();
+			if(message === 'clear') {
+				session.userData = {};
+				session.privateConversationData = {};
+				session.conversationData = {};
+				session.dialogData = {};
+				session.send("restarting conversation");
+				session.endConversation();//: session.beginDialog('/');
+			}
+			else next();
+		}
+	]
+})
