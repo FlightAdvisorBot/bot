@@ -1,0 +1,19 @@
+{
+	"what-do-you-want-to-do": "What do you want to do?",
+	"manage-saving-fund": "Manage saving fund",
+	"flight-planning": "Plan a flight",
+
+	"choose-an-option": "Choose an option",
+
+	"program-saving": "Program a saving",
+	"transfer-money": "Transfer money",
+	"where-can-i-go": "Where can I go",
+	"i-want-to-go": "I want to go to...",
+	"when-want-to-go": "When do you want to go?",
+	"weekdays": "Weekdays",
+	"weekend": "Weekend",
+	"anytime": "Anytime",
+
+	"price-from": "From: %s$",
+	"view-cities": "View cities"
+}

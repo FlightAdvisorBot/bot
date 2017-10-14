@@ -24,7 +24,7 @@ var connector = new builder.ChatConnector({
 //load the botbuilder classes and build a unversal bot using the chat connector
 var bot = new builder.UniversalBot(connector, {
 	localizerSettings: {
-		defaultLocale: "es"
+		defaultLocale: "en"
 	}
 });
 
@@ -36,15 +36,15 @@ app.post("/api/messages", connector.listen());
 bot.dialog("/", [
 	(session, results, next) => {
 
-		let card = new builder.HeroCard()
-			.title("what-do-you-want-to-do")
-			.buttons([
-				builder.CardAction.imBack(session, "manage-saving-fund", "manage-saving-fund"),
-				builder.CardAction.imBack(session, "flight-planning", "flight-planning")
-			])
-		
+		let title = session.gettext("what-do-you-want-to-do");
 		let msg = new builder.Message(session)
-			.attachments([card]);
+			.text(title)
+			.attachments([new builder.Keyboard(session)
+				.buttons([
+					builder.CardAction.imBack(session, session.gettext("manage-saving-fund"), "manage-saving-fund"),
+					builder.CardAction.imBack(session, session.gettext("flight-planning"), "flight-planning")
+				])
+			]);
 
 		builder.Prompts.text(session, msg);
 	},
@@ -62,33 +62,36 @@ bot.dialog("/", [
 
 bot.dialog("saving-fund", [
 	(session, results, next) => {
-		let card = new builder.HeroCard()
-			.title("choose-an-option")
-			.buttons([
-				builder.CardAction.imBack(session, "program-saving", "program-saving"),
-				builder.CardAction.imBack(session, "transfer-money", "transfer-money")
-			])
 		
+		let title = session.gettext("choose-an-option");
 		let msg = new builder.Message(session)
-			.attachments([card]);
+			.text(title)
+			.attachments([new builder.Keyboard(session)
+				.buttons([
+					builder.CardAction.imBack(session, session.gettext("program-saving"), "program-saving"),
+					builder.CardAction.imBack(session, session.gettext("transfer-money"), "transfer-money")
+				])
+			]);
+
 		builder.Prompts.text(session, msg);
 	},
 	(session, results, next) => {
-		
+		session.send("Working in progress");
+		// TODO: implement
 	}
 ])
 
 bot.dialog("flight-planning", [
 	(session, results, next) => {
-		let card = new builder.HeroCard()
-			.title("choose-an-option")
-			.buttons([
-				builder.CardAction.imBack(session, "where-can-i-go", "where-can-i-go"),
-				builder.CardAction.imBack(session, "i-want-to-go", "i-want-to-go")
-			])
-		
+		let title = session.gettext("choose-an-option");
 		let msg = new builder.Message(session)
-			.attachments([card]);
+			.text(title)
+			.attachments([new builder.Keyboard(session)
+				.buttons([
+					builder.CardAction.imBack(session, session.gettext("where-can-i-go"), "where-can-i-go"),
+					builder.CardAction.imBack(session, session.gettext("i-want-to-go"), "i-want-to-go")
+				])
+			]);
 		builder.Prompts.text(session, msg);
 	},
 	(session, results, next) => {
@@ -103,30 +106,35 @@ bot.dialog("flight-planning", [
 
 bot.dialog("where-can-i-go", [
 	(session, results, next) => {
-		let card = new builder.HeroCard()
-			.title("when-want-to-go")
-			.buttons([
-				builder.CardAction.imBack(session, "weekdays", "weekdays"),
-				builder.CardAction.imBack(session, "weekend", "weekend"),
-				builder.CardAction.imBack(session, "i-dont-care", "i-dont-care")
-			])
+		let title = session.gettext("when-want-to-go");
 		
 		let msg = new builder.Message(session)
-			.attachments([card]);
+			.text(title)
+			.attachments([new builder.Keyboard(session)
+				.buttons([
+					builder.CardAction.imBack(session, session.gettext("weekdays"), "weekdays"),
+					builder.CardAction.imBack(session, session.gettext("weekend"), "weekend"),
+					builder.CardAction.imBack(session, session.gettext("anytime"), "anytime")
+				])
+			]);
+
 		builder.Prompts.text(session, msg);
 	},
 	(session, results, next) => {
+
+		let title = session.gettext("which-departure-airport");
+
 		let cityFB = "Barcelona";
+		// hint by FB Graph API
 		// To be calculated by the backend
 
-		let card = new builder.HeroCard()
-			.title("which-departure-airport")
-			.buttons([
-				builder.CardAction.imBack(session, cityFB, cityFB)
-			])
-		
 		let msg = new builder.Message(session)
-			.attachments([card]);
+			.text(title)
+			.attachments([new builder.Keyboard(session)
+				.buttons([
+					builder.CardAction.imBack(session, cityFB, cityFB)
+				])
+			]);
 
 		builder.Prompts.text(session, msg);
 	},
@@ -134,37 +142,70 @@ bot.dialog("where-can-i-go", [
 		let message = session.message.text.toLowerCase();
 		let recomendations = [
 			{
-				from: "Barcelona",
-				to: "Madrid",
-				price: "125",
-				url: "http://google.es"
+        countryName: "United Kingdom",
+        countryId: "abc",
+				priceFrom: 123,
+				imageUrl: "https://www.elnacional.cat/uploads/s1/23/28/12/6/DHiit56XoAI2IKB_1_630x630.jpg"
 			},
 			{
-				from: "Barcelona",
-				to: "Bilbao",
-				price: "130",
-				url: "http://google.es"
+        countryName: "Germany",
+        countryId: "cba",
+				priceFrom: 321,
+				imageUrl: "https://www.elnacional.cat/uploads/s1/23/28/12/6/DHiit56XoAI2IKB_1_630x630.jpg"
 			}
 		]
 
-		let cards = [];
+    let cards = [];
 
-		for(let recomendation of recomendations) {
-			let card = new builder.HeroCard()
-				.title(`${recomendation.to} for ${recomendation.price}`)
-				.buttons([
-					builder.CardAction.openUrl(session, recomendation.url, "More info")
-				])
-			cards.push(card);
+		for(let recomendation of recomendations.slice(0, 4)) {
+			let elem = {
+        // picture, title(country name), price from 
+        title: recomendation.countryName,
+        subtitle: session.gettext("price-from", recomendation.priceFrom),
+        image_url: recomendation.imageUrl,
+        buttons: [
+          {
+            type: "postback",
+            title: session.gettext("view-cities"),
+            payload: recomendation.countryId
+          }
+        ]
+      }
 		}
 
-		let msg = new builder.Message(session)
-			.attachments(cards);
+    let elements = [];
+    
+    let msg = new botbuilder.Message(session).sourceEvent({
+      //specify the channel
+      facebook: {
+        //format according to channel's requirements
+        //(in our case, the above JSON required by Facebook)
+        attachment: {
+          type: "template",
+          payload: {
+            "template_type": "list",
+            "top_element_style": "compact",
+            elements,
+            "buttons": [
+              {
+                "title": "View More",
+                "type": "postback",
+                "payload": "payload"            
+              }
+            ]  
+          }
+        } //end of attachment
+      }
+    })
 		
 		// builder.Prompts.text(msg);
-		session.send(msg);
+		// session.send(msg);
+    
 	}
 ])
+
+
+
 
 bot.use({
 	botbuilder: [
