@@ -216,7 +216,7 @@ bot.dialog("flight-planning", [
   (session, results, next) => {
 
     let placeId;
-    if(results) placeId = searchCodeLocation(results.response);
+    if(results && results.response) placeId = searchCodeLocation(results.response);
     else placeId = session.userData.destination;
     // TODO: http get request to skyscanner api to get flights to placeId country
 
