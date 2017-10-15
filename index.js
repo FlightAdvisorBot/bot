@@ -47,7 +47,7 @@ bot.dialog('/', [
     let name = session.message.address.user.name.split(" ")[0];
     session.send("welcome-message", name);
 
-    session.userData.money = 200;
+    session.userData.money = 100;
 
     let options = {
 			prompt: "Tell us where it's going to be your travel origin normally.",
@@ -130,7 +130,7 @@ bot.dialog("saving-fund", [
 
 bot.dialog("flight-planning", [
 	(session, results, next) => {
-    if(results.entities.length > 0){
+    if(results && results.entities && results.entities.length > 0){
       for(let entity of results.entities) {
         if(entity.type == "builtin.geography.country") {
           session.userData.destination = searchCodeLocation(entity.entity[0].toUpperCase() + entity.entity.slice(1));
@@ -143,14 +143,14 @@ bot.dialog("flight-planning", [
 	(session, results, next) => {
     
     session.userData.origin = results.where;
-    session.userData.when = results.when;
+    session.userData.when = results.when[0].toUpperCase() + results.when.slice(1);
     
     if(session.userData.destination) return next();
 
     request({
       url: APIUrl + "/countries",
       qs: {
-        origin: "ES",
+        origin: session.userData.origin,
         locale: session.preferredLocale(),
         availability: session.userData.when
       },
@@ -196,7 +196,7 @@ bot.dialog("flight-planning", [
                 elements,
                 "buttons": [
                   {
-                    "title": "Check more expensive countries",
+                    "title": "Check more countries",
                     "type": "postback",
                     "payload": "payload"            
                   }
@@ -212,14 +212,84 @@ bot.dialog("flight-planning", [
       .catch((err) => {
         console.log(err);
       })
-    
-		
   },
   (session, results, next) => {
+
     let placeId;
     if(results) placeId = searchCodeLocation(results.response);
     else placeId = session.userData.destination;
     // TODO: http get request to skyscanner api to get flights to placeId country
+
+    request({
+      url: APIUrl + "/flights",
+      qs: {
+        origin: session.userData.origin,
+        locale: session.preferredLocale(),
+        availability: session.userData.when,
+        destination: placeId
+      },
+      json: true
+    })
+      .then((resp) => {
+        console.log(resp);
+        let flights = resp;
+        let elements = [{
+          title: `TOP 3 cheapest cities to go of ${session.userData.destination}`,
+          subtitle: "Press on 'Check more cities' if any of the list suits your preferences" ,
+          image_url: "https://www.elnacional.cat/uploads/s1/23/28/12/6/DHiit56XoAI2IKB_1_630x630.jpg"
+        }];
+        
+        for(let flight of flights.slice(0, 3)) {
+          let elem = {
+            // picture, title(country name), price from 
+            title: `From ${flight.origin} to ${flight.destination} for ${flight.price}€`,
+            subtitle: `Outbound: ${flight.outboundDate}\nReturn: ${flight.inboundDate}`,
+            image_url: flight.imgUrl,
+            buttons: [
+              (flight.price < session.userData.money) ? {
+                  type: "postback",
+                  title: "View more flights",
+                  payload: flight.destination
+                }
+                : {
+                  type:"web_url",
+                  url:"https://www.imaginbank.com/prestamo-imagin_es.html",
+                  title :"Loan info",
+                  webview_height_ratio: "full"
+                }
+            ]
+          }
+          elements.push(elem);
+        }
+        
+        let msg = new builder.Message(session).sourceEvent({
+          //specify the channel
+          facebook: {
+            //format according to channel's requirements
+            //(in our case, the above JSON required by Facebook)
+            attachment: {
+              type: "template",
+              payload: {
+                "template_type": "list",
+                "top_element_style": "compact",
+                elements,
+                "buttons": [
+                  {
+                    "title": "Check more cities",
+                    "type": "postback",
+                    "payload": "payload"            
+                  }
+                ]  
+              }
+            } //end of attachment
+          }
+        })
+            
+        builder.Prompts.text(session, msg);
+      })
+      .catch(err => {
+        console.log(err);
+      })
 
     let flights = [
       {
@@ -242,59 +312,7 @@ bot.dialog("flight-planning", [
       }
     ]
 
-    let elements = [{
-      title: "TOP 3 cheapest cities to go of United Kingdom",
-      subtitle: "Press on 'Check more expensive cities' if any of the list suits your preferences" ,
-      image_url: "https://www.elnacional.cat/uploads/s1/23/28/12/6/DHiit56XoAI2IKB_1_630x630.jpg"
-    }];
     
-    for(let flight of flights.slice(0, 3)) {
-      let elem = {
-        // picture, title(country name), price from 
-        title: `From ${flight.origin} to ${flight.destination} for ${flight.price}€`,
-        subtitle: `Outbound: ${flight.outboundDate}\nReturn: ${flight.returnDate}`,
-        image_url: flight.imageUrl,
-        buttons: [
-          (flight.price < session.userData.money) ? {
-              type: "postback",
-              title: "View more flights",
-              payload: flight.flightNum
-            }
-            : {
-              type:"web_url",
-              url:"https://www.imaginbank.com/prestamo-imagin_es.html",
-              title :"Loan info",
-              webview_height_ratio: "full"
-            }
-        ]
-      }
-      elements.push(elem);
-    }
-    
-    let msg = new builder.Message(session).sourceEvent({
-      //specify the channel
-      facebook: {
-        //format according to channel's requirements
-        //(in our case, the above JSON required by Facebook)
-        attachment: {
-          type: "template",
-          payload: {
-            "template_type": "list",
-            "top_element_style": "compact",
-            elements,
-            "buttons": [
-              {
-                "title": "Check more expensive cities",
-                "type": "postback",
-                "payload": "payload"            
-              }
-            ]  
-          }
-        } //end of attachment
-      }
-    })
-        
-    builder.Prompts.text(session, msg);
     
   },
   (session, results, next) => {
