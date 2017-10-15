@@ -234,7 +234,7 @@ bot.dialog("flight-planning", [
         console.log(resp);
         let flights = resp;
         let elements = [{
-          title: `TOP 3 cheapest cities to go of ${session.userData.destination}`,
+          title: `TOP 3 cheapest cities to go`,
           subtitle: "Press on 'Check more cities' if any of the list suits your preferences" ,
           image_url: "https://www.elnacional.cat/uploads/s1/23/28/12/6/DHiit56XoAI2IKB_1_630x630.jpg"
         }];
