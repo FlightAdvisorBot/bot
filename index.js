@@ -47,6 +47,8 @@ bot.dialog('/', [
     let name = session.message.address.user.name.split(" ")[0];
     session.send("welcome-message", name);
 
+    session.userData.money = 200;
+
     let options = {
 			prompt: "Tell us where it's going to be your travel origin normally.",
 			repropmt: "I can't find that location, try it again.",
@@ -135,45 +137,22 @@ bot.dialog("flight-planning", [
         }
       }
     }
-		let title = session.gettext("choose-an-option");
-		let msg = new builder.Message(session)
-			.text(title)
-			.attachments([new builder.Keyboard(session)
-				.buttons([
-					builder.CardAction.imBack(session, session.gettext("where-can-i-go"), "where-can-i-go"),
-					builder.CardAction.imBack(session, session.gettext("i-want-to-go"), "i-want-to-go")
-				])
-			]);
-		builder.Prompts.text(session, msg);
-	},
-	(session, results, next) => {
-		let message = session.message.text.toLowerCase();
-		if(message.includes("where")) {
-			session.beginDialog("where-can-i-go");
-		} else if(message.includes("want")) {
-			session.beginDialog("want-to-go");
-		}
-	}
-])
-
-
-bot.dialog("where-can-i-go", [
-	(session, results, next) => {
-		session.beginDialog("when-and-where");
+    session.beginDialog("when-and-where");
+		
 	},
 	(session, results, next) => {
     
-    session.dialogData.from = results.where;
-    session.dialogData.when = results.when;
-
-    // TODO: query to SkyScanner Api for country recommendations
+    session.userData.origin = results.where;
+    session.userData.when = results.when;
+    
+    if(session.userData.destination) return next();
 
     request({
       url: APIUrl + "/countries",
       qs: {
         origin: "ES",
         locale: session.preferredLocale(),
-        availability: session.dialogData.when
+        availability: session.userData.when
       },
       json: true
     })
@@ -187,6 +166,7 @@ bot.dialog("where-can-i-go", [
     
     
         for(let recomendation of recomendations.slice(0, 3)) {
+          if (recomendation.price < session.userData.price) continue;
           let elem = {
             // picture, title(country name), price from 
             title: recomendation.destination,
@@ -236,7 +216,9 @@ bot.dialog("where-can-i-go", [
 		
   },
   (session, results, next) => {
-    let placeId = results.response;
+    let placeId;
+    if(results) placeId = searchCodeLocation(results.response);
+    else placeId = session.userData.destination;
     // TODO: http get request to skyscanner api to get flights to placeId country
 
     let flights = [
@@ -273,11 +255,17 @@ bot.dialog("where-can-i-go", [
         subtitle: `Outbound: ${flight.outboundDate}\nReturn: ${flight.returnDate}`,
         image_url: flight.imageUrl,
         buttons: [
-          {
-            type: "postback",
-            title: "View more flights",
-            payload: flight.flightNum
-          }
+          (flight.price < session.userData.money) ? {
+              type: "postback",
+              title: "View more flights",
+              payload: flight.flightNum
+            }
+            : {
+              type:"web_url",
+              url:"https://www.imaginbank.com/prestamo-imagin_es.html",
+              title :"Loan info",
+              webview_height_ratio: "full"
+            }
         ]
       }
       elements.push(elem);
@@ -337,6 +325,8 @@ bot.dialog("when-and-where", [
 
     session.dialogData.when = when;
 
+    if(session.userData.origin) return next();
+
 		let title = session.gettext("which-departure-airport");
 
 		let cityFB = "Barcelona";
@@ -354,7 +344,7 @@ bot.dialog("when-and-where", [
 		builder.Prompts.text(session, msg);
   },
   (session, results, next) => {
-    let where = session.message.text.toLowerCase();
+    let where = session.userData.origin || session.message.text.toLowerCase();
     session.endDialogWithResult({ where,
                                   when: session.dialogData.when });
   }
