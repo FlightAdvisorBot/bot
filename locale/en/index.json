@@ -1,5 +1,6 @@
 {
-	"what-do-you-want-to-do": "What do you want to do?",
+	"welcome-message": "Welcome %s! I can help you to find flights that suits to your badget.",
+	"what-do-you-want-to-do": "What can I do for you?",
 	"manage-saving-fund": "Manage saving fund",
 	"flight-planning": "Plan a flight",
 
@@ -15,6 +16,6 @@
 	"anytime": "Anytime",
 	"which-departure-airport": "Where are you departing from?",
 
-	"price-from": "From: %s$",
+	"price-from": "From: %s€",
 	"view-cities": "View cities"
 }
